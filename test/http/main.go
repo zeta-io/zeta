@@ -1,18 +1,12 @@
-package main
+package http
 
 import (
-	"fmt"
-	"github.com/vectorgo/mvc/core/json"
-	"github.com/vectorgo/mvc/core/parser/http"
 	"log"
 	http1 "net/http"
 )
 
 func sayhelloGolang(w http1.ResponseWriter, r *http1.Request) {
-	parser := http.Parser{}
-	requestInfo, err:= parser.Parse(r)
-	fmt.Println(err)
-	fmt.Println(json.ToJsonIgnoreError(requestInfo))
+
 }
 
 func main() {
@@ -21,4 +15,6 @@ func main() {
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
+
+	http1.DetectContentType()
 }

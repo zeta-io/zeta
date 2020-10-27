@@ -1,2 +1,2 @@
 # mvc
-go mvc
+mvc for nico.
