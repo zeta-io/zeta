@@ -3,73 +3,86 @@ package mvc
 
 import "github.com/vectorgo/mvc/http"
 
-type RouterType uint8
-
-const (
-	RouterTypeGroup  RouterType = 1
-	RouterTypeRouter
-)
-
-var Router = router{}
-
-type Middleware func(c Context)
-
 type router struct {
-	middleware  []Middleware
+	url string
+	middleware  []HandlerFunc
 	mappings    []mapping
-	groups      []group
 }
 
 type mapping struct {
 	url        string
-	call       interface{}
 	method     http.Method
-	middleware  []Middleware
+	middleware  []HandlerFunc
 }
 
-type group struct {
-	url        string
-	middleware  []Middleware
-	mappings    []mapping
-}
-
-func (r *router) Group(url string, middleware ...Middleware) *group {
-	g := &group{
-		middleware: middleware,
+func Router(url string, middleware ...HandlerFunc) *router{
+	return &router{
 		url: url,
+		middleware: middleware,
 	}
-	if r.groups == nil{
-		r.groups = make([]group, 0)
-	}
-	r.groups = append(r.groups, g)
-	return g
 }
 
-func (r *router) Handle(method http.Method, url string, call interface{}, middleware ...Middleware) *router {
+func (r *router) Option(m *Mvc){
+	m.r = r
+}
+
+func (r *router) Use(middleware ...HandlerFunc) *router{
+	r.middleware = append(r.middleware, middleware...)
+	return r
+}
+
+func (r *router) Group(url string, middleware ...HandlerFunc) *group {
+	return &group{
+		middleware: middleware,
+		url: r.url + url,
+		r: r,
+	}
+}
+
+func (r *router) Handle(method http.Method, url string, middleware ...HandlerFunc) *router {
 	if r.mappings == nil {
 		r.mappings = make([]mapping, 0)
 	}
 	r.mappings = append(r.mappings, mapping{
 		method:     method,
-		url:        url,
-		call:       call,
-		middleware: middleware,
+		url:        r.url + url,
+		middleware: append(r.middleware, middleware...),
 	})
 	return r
 }
 
-func (r *router) Get(url string, call interface{}, middleware ...Middleware) *router {
-	return r.Handle(http.MethodGet, url, call, middleware...)
+func (r *router) Get(url string, middleware ...HandlerFunc) *router {
+	return r.Handle(http.MethodGet, url, middleware...)
 }
 
-func (r *router) Post(url string, call interface{}, middleware ...Middleware) *router {
-	return r.Handle(http.MethodPost, url, call, middleware...)
+func (r *router) Post(url string, middleware ...HandlerFunc) *router {
+	return r.Handle(http.MethodPost, url, middleware...)
 }
 
-func (r *router) Put(url string, call interface{}, middleware ...Middleware) *router {
-	return r.Handle(http.MethodPut, url, call, middleware...)
+func (r *router) Put(url string, middleware ...HandlerFunc) *router {
+	return r.Handle(http.MethodPut, url, middleware...)
 }
 
-func (r *router) Delete(url string, call interface{}, middleware ...Middleware) *router {
-	return r.Handle(http.MethodDelete, url, call, middleware...)
+func (r *router) Delete(url string, middleware ...HandlerFunc) *router {
+	return r.Handle(http.MethodDelete, url, middleware...)
+}
+
+func (r *router) Patch(url string, middleware ...HandlerFunc) *router {
+	return r.Handle(http.MethodPatch, url, middleware...)
+}
+
+func (r *router) Head(url string, middleware ...HandlerFunc) *router {
+	return r.Handle(http.MethodHead, url, middleware...)
+}
+
+func (r *router) Options(url string, middleware ...HandlerFunc) *router {
+	return r.Handle(http.MethodOptions, url, middleware...)
+}
+
+func (r *router) Connect(url string, middleware ...HandlerFunc) *router {
+	return r.Handle(http.MethodConnect, url, middleware...)
+}
+
+func (r *router) Trace(url string, middleware ...HandlerFunc) *router {
+	return r.Handle(http.MethodTrace, url, middleware...)
 }

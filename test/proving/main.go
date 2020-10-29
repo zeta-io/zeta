@@ -1,30 +1,30 @@
 package main
 
-import "github.com/vectorgo/mvc"
+import (
+	ginx "github.com/gin-gonic/gin"
+	"github.com/vectorgo/mvc"
+	"github.com/vectorgo/mvc/driver/gin"
+	"strconv"
+)
 
-type UserApi struct {
-	getUser int `api:"/api/v1/users" method:"post" `
+type userApi struct {}
+
+func (u *userApi) list() string{
+	return "hello nico"
 }
 
-
-func get(){
-
-}
-
-func handleFunc(uri string, fn interface{}){
-
-}
+var uapi = userApi{}
 
 func main() {
-	//test := Test{}
-	//t := reflect.TypeOf(test)
-	//methodNum := t.NumMethod()
-	//
-	//for i := 0; i < methodNum; i ++{
-	//	t.Method(i).
-	//}
-	//t.Field(1).Tag
-	//handleFunc("abc", get)
+	r := ginx.New()
 
-	mvc.New(mvc.Config{}).Router().Post("", nil).Group("u").Post("a", nil)
+	driver := gin.New(r)
+	router := mvc.Router("/api/v1/users")
+	router.Post("", driver.HandlerFunc(uapi.list))
+	mvc.Use(router, driver).Complete()
+
+	e := r.Run(":" + strconv.Itoa(8080))
+	if e != nil{
+		panic(e)
+	}
 }

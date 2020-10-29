@@ -1,7 +1,9 @@
 // Data assembly to struct
 package da
 
-import "github.com/vectorgo/mvc/http"
+import (
+	"github.com/vectorgo/mvc/http"
+)
 
 const(
 	TQuery = "query"
