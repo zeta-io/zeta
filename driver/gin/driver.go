@@ -6,10 +6,17 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/vectorgo/mvc"
 	"github.com/vectorgo/mvc/http"
+	"github.com/vectorgo/mvc/util/types"
 	"reflect"
+	"strings"
 )
 
 const ContextKey = "gin#context#key"
+
+var(
+	contextType = reflect.TypeOf(context.TODO())
+	ginContextType = reflect.TypeOf(gin.Context{})
+)
 
 type Driver struct {
 	e *gin.Engine
@@ -53,11 +60,57 @@ func (d Driver) HandlerFunc(call interface{}) mvc.HandlerFunc{
 	}
 }
 
-func process(c context.Context, gc *gin.Context, call interface{}) {
-	ct := reflect.TypeOf(call)
-	for i := 0; i < ct.NumField(); i ++{
-		f := ct.Field(i)
+func process(ctx context.Context, c *gin.Context, call interface{}) {
+	processor := newRequestParamsProcessor(c)
 
+	typ := reflect.TypeOf(call)
+	args := make([]reflect.Value, 0)
+	for i := 0; i < typ.NumField(); i ++{
+		f := typ.Field(i)
+		ptr := false
+		t := f.Type
+		if t.Kind() == reflect.Ptr{
+			ptr = true
+			// handle as element type.
+			t = t.Elem()
+		}
+
+		var target interface{}
+		switch t {
+		case contextType:
+			target = ctx
+		case ginContextType:
+			target = *c
+		default:
+			name := f.Name
+			source := ""
+			if f.Tag.Get("param") == ""{
+				ret, err := types.Convert("", t)
+				if err != nil{
+					panic(err)
+				}
+				target = ret
+				break
+			}
+			params := strings.Split(f.Tag.Get("param"), ",")
+			source = params[0]
+			if len(params) > 1{
+				name = params[1]
+			}
+
+			ret, err := processor.process(t, source, name)
+			if err != nil{
+				panic(err)
+			}
+			target = ret
+		}
+		if ptr{
+			target = &target
+		}
+		args = append(args, reflect.ValueOf(target))
 	}
+	rets := reflect.ValueOf(call).Call(args)
+	fmt.Println(rets)
 }
+
 
