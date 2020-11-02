@@ -2,6 +2,8 @@ package gin
 
 import (
 	"bytes"
+	"errors"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/vectorgo/mvc/http"
 	"github.com/vectorgo/mvc/util/types"
@@ -83,6 +85,8 @@ func (p *requestParamsProcessor) process(t reflect.Type, source, name string) (i
 		return p.processFormData(t, name)
 	case "body":
 		return p.processJson(t, name)
+	default:
+		return nil, errors.New(fmt.Sprintf("unsupport params source: %v", source))
 	}
 }
 
@@ -107,7 +111,6 @@ func (p *requestParamsProcessor) processFormData(t reflect.Type, name string) (i
 }
 
 func (p *requestParamsProcessor) processJson(t reflect.Type, name string) (interface{}, error){
-	//TODO json path.
 	return types.Convert(p.body, t)
 }
 

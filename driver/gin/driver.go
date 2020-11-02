@@ -6,7 +6,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/vectorgo/mvc"
 	"github.com/vectorgo/mvc/http"
-	"github.com/vectorgo/mvc/util/types"
 	"reflect"
 	"strings"
 )
@@ -14,16 +13,17 @@ import (
 const ContextKey = "gin#context#key"
 
 var(
-	contextType = reflect.TypeOf(context.TODO())
-	ginContextType = reflect.TypeOf(gin.Context{})
+	contextType = "context.Context"
+	ginContextType = "gin.Context"
 )
 
 type Driver struct {
 	e *gin.Engine
+	r func(c *gin.Context, data interface{}, err error)
 }
 
-func New(e *gin.Engine) Driver{
-	return Driver{e}
+func New(e *gin.Engine, r func(c *gin.Context, data interface{}, err error)) Driver{
+	return Driver{e: e, r: r}
 }
 
 func (d Driver) Option(m *mvc.Mvc){
@@ -47,70 +47,105 @@ func (d Driver) HandlerFunc(call interface{}) mvc.HandlerFunc{
 	if reflect.TypeOf(call).Kind() != reflect.Func{
 		panic("handler func type must be func.")
 	}
-	return func(c context.Context) {
-		o := c.Value(ContextKey)
+	return func(ctx context.Context) {
+		o := ctx.Value(ContextKey)
 		if o == nil{
 			panic("gin context is nil.")
 		}
-		gc, ok := o.(*gin.Context)
+		c, ok := o.(*gin.Context)
 		if ! ok{
 			panic(fmt.Sprintf("can't cast %v to *gin.Context.", o))
 		}
-		process(c, gc, call)
+		rets := process(ctx, c, call)
+		var data interface{}
+		var err error
+		for _, ret := range rets{
+			if e, ok := ret.Interface().(error); ok{
+				err = e
+			}else if data == nil{
+				data = ret.Interface()
+			}
+		}
+		d.r(c, data, err)
 	}
 }
 
-func process(ctx context.Context, c *gin.Context, call interface{}) {
-	processor := newRequestParamsProcessor(c)
-
+func process(ctx context.Context, c *gin.Context, call interface{}) []reflect.Value{
+	processor, err := newRequestParamsProcessor(c)
+	if err != nil{
+		panic(err)
+	}
 	typ := reflect.TypeOf(call)
 	args := make([]reflect.Value, 0)
-	for i := 0; i < typ.NumField(); i ++{
-		f := typ.Field(i)
+	for i := 0; i < typ.NumIn(); i ++{
+		in := typ.In(i)
 		ptr := false
-		t := f.Type
-		if t.Kind() == reflect.Ptr{
+		if in.Kind() == reflect.Ptr{
 			ptr = true
 			// handle as element type.
-			t = t.Elem()
+			in = in.Elem()
 		}
 
-		var target interface{}
-		switch t {
+		var target reflect.Value
+		switch in.String() {
 		case contextType:
-			target = ctx
+			target = reflect.ValueOf(ctx)
+			if ptr{
+				target = reflect.ValueOf(&ctx)
+			}
 		case ginContextType:
-			target = *c
+			target = reflect.ValueOf(*c)
+			if ptr{
+				target = reflect.ValueOf(c)
+			}
 		default:
-			name := f.Name
-			source := ""
-			if f.Tag.Get("param") == ""{
-				ret, err := types.Convert("", t)
-				if err != nil{
-					panic(err)
-				}
-				target = ret
-				break
+			if in.Kind() != reflect.Struct{
+				continue
 			}
-			params := strings.Split(f.Tag.Get("param"), ",")
-			source = params[0]
-			if len(params) > 1{
-				name = params[1]
-			}
-
-			ret, err := processor.process(t, source, name)
-			if err != nil{
-				panic(err)
-			}
-			target = ret
+			target = processRequestParams(processor, in, ptr)
 		}
-		if ptr{
-			target = &target
-		}
-		args = append(args, reflect.ValueOf(target))
+		args = append(args, target)
 	}
-	rets := reflect.ValueOf(call).Call(args)
-	fmt.Println(rets)
+	return reflect.ValueOf(call).Call(args)
+}
+
+func processRequestParams(processor *requestParamsProcessor, in reflect.Type, ptr bool) reflect.Value{
+	obj := reflect.New(in).Elem()
+	for i := 0; i < in.NumField(); i ++{
+		f := in.Field(i)
+		name := f.Name
+		source := ""
+		if f.Tag.Get("param") == ""{
+			continue
+		}
+		params := strings.Split(f.Tag.Get("param"), ",")
+		source = params[0]
+		if len(params) > 1{
+			name = params[1]
+		}
+
+		ft := f.Type
+		ptr := false
+		if ft.Kind() == reflect.Ptr{
+			ptr = true
+			ft = ft.Elem()
+		}
+
+		ret, err := processor.process(ft, source, name)
+		if err != nil{
+			panic(err)
+		}
+		target := reflect.New(ft).Elem()
+		target.Set(reflect.ValueOf(ret))
+		if ptr{
+			target = target.Addr()
+		}
+		obj.FieldByName(f.Name).Set(target)
+	}
+	if ptr{
+		obj = obj.Addr()
+	}
+	return obj
 }
 
 

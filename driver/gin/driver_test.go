@@ -13,5 +13,5 @@ func TestDriver_HandlerFunc(t *testing.T) {
 	}) string{
 		return "hello nico"
 	})
-	handlerFunc(context.WithValue(context.Background(), ContextKey, &gin.Context{}))
+	handlerFunc(context.WithValue(context.Background(), ContextKey, gin.Context{}))
 }
