@@ -5,7 +5,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/vectorgo/mvc"
 	"github.com/vectorgo/mvc/http"
-	"log"
 	"reflect"
 	"strings"
 )
