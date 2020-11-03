@@ -2,10 +2,10 @@ package gin
 
 import (
 	"context"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/vectorgo/mvc"
 	"github.com/vectorgo/mvc/http"
+	"log"
 	"reflect"
 	"strings"
 )
@@ -33,41 +33,34 @@ func (d Driver) Option(m *mvc.Mvc){
 func (d Driver) Handle(method http.Method, url string, middleware ...mvc.HandlerFunc){
 	handleFunc := make([]gin.HandlerFunc, 0)
 	for _, m := range middleware{
+		call := m
 		handleFunc = append(handleFunc, func(c *gin.Context){
-			m(context.WithValue(context.Background(), ContextKey, c))
+			ctx := context.WithValue(context.Background(), ContextKey, c)
+			if call == nil{
+				panic("handler func args is nil.")
+			}
+			if reflect.TypeOf(call).Kind() != reflect.Func{
+				panic("handler func type must be func.")
+			}
+			if c.IsAborted(){
+				return
+			}
+			rets := process(ctx, c, call)
+			if len(rets) > 0{
+				var data interface{}
+				var err error
+				for _, ret := range rets{
+					if e, ok := ret.Interface().(error); ok{
+						err = e
+					}else if data == nil{
+						data = ret.Interface()
+					}
+				}
+				d.r(c, data, err)
+			}
 		})
 	}
 	d.e.Handle(string(method), url, handleFunc...)
-}
-
-func (d Driver) HandlerFunc(call interface{}) mvc.HandlerFunc{
-	if call == nil{
-		panic("handler func args is nil.")
-	}
-	if reflect.TypeOf(call).Kind() != reflect.Func{
-		panic("handler func type must be func.")
-	}
-	return func(ctx context.Context) {
-		o := ctx.Value(ContextKey)
-		if o == nil{
-			panic("gin context is nil.")
-		}
-		c, ok := o.(*gin.Context)
-		if ! ok{
-			panic(fmt.Sprintf("can't cast %v to *gin.Context.", o))
-		}
-		rets := process(ctx, c, call)
-		var data interface{}
-		var err error
-		for _, ret := range rets{
-			if e, ok := ret.Interface().(error); ok{
-				err = e
-			}else if data == nil{
-				data = ret.Interface()
-			}
-		}
-		d.r(c, data, err)
-	}
 }
 
 func process(ctx context.Context, c *gin.Context, call interface{}) []reflect.Value{

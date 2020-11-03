@@ -34,7 +34,7 @@ func (r *router) Use(middleware ...HandlerFunc) *router{
 func (r *router) Group(url string, middleware ...HandlerFunc) *group {
 	return &group{
 		middleware: middleware,
-		url: r.url + url,
+		url: url,
 		r: r,
 	}
 }

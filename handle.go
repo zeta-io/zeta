@@ -1,5 +1,3 @@
 package mvc
 
-import "context"
-
-type HandlerFunc func(c context.Context)
+type HandlerFunc interface{}
