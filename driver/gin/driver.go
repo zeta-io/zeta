@@ -44,7 +44,11 @@ func (d Driver) Handle(method http.Method, url string, middleware ...mvc.Handler
 			if c.IsAborted(){
 				return
 			}
-			rets := process(ctx, c, call)
+			rets, err := process(ctx, c, call)
+			if err != nil{
+				d.r(c, err.Error(), err)
+				return
+			}
 			if len(rets) > 0{
 				var data interface{}
 				var err error
@@ -62,10 +66,10 @@ func (d Driver) Handle(method http.Method, url string, middleware ...mvc.Handler
 	d.e.Handle(string(method), url, handleFunc...)
 }
 
-func process(ctx context.Context, c *gin.Context, call interface{}) []reflect.Value{
+func process(ctx context.Context, c *gin.Context, call interface{}) ([]reflect.Value, error){
 	processor, err := newRequestParamsProcessor(c)
 	if err != nil{
-		panic(err)
+		return nil, err
 	}
 	typ := reflect.TypeOf(call)
 	args := make([]reflect.Value, 0)
@@ -94,14 +98,17 @@ func process(ctx context.Context, c *gin.Context, call interface{}) []reflect.Va
 			if in.Kind() != reflect.Struct{
 				continue
 			}
-			target = processRequestParams(processor, in, ptr)
+			target, err = processRequestParams(processor, in, ptr)
+			if err != nil{
+				return nil, err
+			}
 		}
 		args = append(args, target)
 	}
-	return reflect.ValueOf(call).Call(args)
+	return reflect.ValueOf(call).Call(args), nil
 }
 
-func processRequestParams(processor *requestParamsProcessor, in reflect.Type, ptr bool) reflect.Value{
+func processRequestParams(processor *requestParamsProcessor, in reflect.Type, ptr bool) (reflect.Value, error){
 	obj := reflect.New(in).Elem()
 	for i := 0; i < in.NumField(); i ++{
 		f := in.Field(i)
@@ -125,14 +132,16 @@ func processRequestParams(processor *requestParamsProcessor, in reflect.Type, pt
 
 		ret, ok, err := processor.process(ft, source, name)
 		if err != nil{
-			panic(err)
+			return obj, err
 		}
-		if !ok && ptr{
+		if (!ok || ret == nil) && ptr{
 			target := reflect.New(f.Type).Elem()
 			obj.FieldByName(f.Name).Set(target)
 		}else{
 			target := reflect.New(ft).Elem()
-			target.Set(reflect.ValueOf(ret))
+			if ret != nil{
+				target.Set(reflect.ValueOf(ret))
+			}
 			if ptr{
 				target = target.Addr()
 			}
@@ -142,7 +151,7 @@ func processRequestParams(processor *requestParamsProcessor, in reflect.Type, pt
 	if ptr{
 		obj = obj.Addr()
 	}
-	return obj
+	return obj, nil
 }
 
 

@@ -19,6 +19,7 @@ func (u *userApi) list(context context.Context, c1 *context.Context, c *ginx.Con
 	Age *int `json:"age" param:"query,age"`
 	NA  *string `json:"na" param:"query,na"`
 	NB  *string `json:"nb" param:"query,nb"`
+	B *bool `param:"query,b"`
 }) (string, error){
 	fmt.Println(context)
 	fmt.Println(c1)
