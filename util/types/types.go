@@ -25,19 +25,16 @@ var (
 	float32Type = reflect.TypeOf(float32(0))
 	float64Type = reflect.TypeOf(float64(0))
 	stringType  = reflect.TypeOf("")
+	stringArrayType = reflect.TypeOf([]string{})
 	bytesType   = reflect.TypeOf([]byte{})
 )
 
 func Convert(src interface{}, t reflect.Type) (interface{}, error) {
 	val := strings.ValueOf(src)
 	res := interface{}(nil)
-	switch t {
-	case float64Type, float32Type, boolType, intType, uintType, int8Type, uint8Type, int16Type, uint16Type, int32Type, uint32Type, int64Type, uint64Type:
-		if val == "" {
-			return nil, nil
-		}
+	if val == "" && t != stringType{
+		return nil, nil
 	}
-
 	switch t {
 	case float64Type:
 		dec, err := decimal.NewFromString(val)
@@ -124,12 +121,10 @@ func Convert(src interface{}, t reflect.Type) (interface{}, error) {
 		res = []byte(val)
 	default:
 		v := reflect.New(t)
-		if val != "" {
-			inter := v.Interface()
-			err := json.Unmarshal([]byte(val), &inter)
-			if err != nil {
-				return nil, err
-			}
+		inter := v.Interface()
+		err := json.Unmarshal([]byte(val), &inter)
+		if err != nil {
+			return nil, err
 		}
 		res = v.Elem().Interface()
 	}
