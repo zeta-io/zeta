@@ -17,6 +17,7 @@ var(
 )
 
 type Driver struct {
+	m *mvc.Mvc
 	e *gin.Engine
 	r func(c *gin.Context, data interface{}, err error)
 }

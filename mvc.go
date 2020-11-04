@@ -1,12 +1,17 @@
 package mvc
 
+import "github.com/vectorgo/mvc/json"
+
 type Mvc struct {
 	r  *router
 	driver  Driver
+	json json.JSON
 }
 
 func Use(options ...Option) *Mvc{
-	m := &Mvc{}
+	m := &Mvc{
+		json: json.Default(),
+	}
 	for _, option := range options{
 		option.Option(m)
 	}
