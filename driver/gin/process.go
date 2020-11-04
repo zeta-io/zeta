@@ -13,22 +13,24 @@ import (
 	"strings"
 )
 
+var (
+	parameterIsNullError = errors.New("parameter is null. ")
+)
+
 type Values map[string][]string
 
-func (v Values) Get(key string) string{
+func (v Values) Get(key string) (string, bool){
 	if vs, ok := v[key]; ok{
 		if len(vs) > 0{
-			return vs[0]
+			return vs[0], true
 		}
 	}
-	return ""
+	return "", false
 }
 
-func (v Values) GetArray(key string) []string{
-	if vs, ok := v[key]; ok{
-		return vs
-	}
-	return []string{}
+func (v Values) GetArray(key string) ([]string, bool){
+	vs, ok := v[key]
+	return vs, ok
 }
 
 type requestParamsProcessor struct {
@@ -77,7 +79,7 @@ func contentType(c *gin.Context) string{
 	return strings.TrimSpace(strings.Split(c.ContentType(), ";")[0])
 }
 
-func (p *requestParamsProcessor) process(t reflect.Type, source, name string) (interface{}, error){
+func (p *requestParamsProcessor) process(t reflect.Type, source, name string) (interface{}, bool, error){
 	switch source {
 	case "query":
 		return p.processQuery(t, name)
@@ -86,32 +88,37 @@ func (p *requestParamsProcessor) process(t reflect.Type, source, name string) (i
 	case "body":
 		return p.processJson(t, name)
 	default:
-		return nil, errors.New(fmt.Sprintf("unsupport params source: %v", source))
+		return nil, false, errors.New(fmt.Sprintf("unsupport params source: %v", source))
 	}
 }
 
-func (p *requestParamsProcessor) processQuery(t reflect.Type, name string) (interface{}, error){
+func (p *requestParamsProcessor) processQuery(t reflect.Type, name string) (interface{}, bool, error){
 	src := interface{}(nil)
+	ok := false
 	if t.Kind() == reflect.Array || t.Kind() == reflect.Slice{
-		src = p.queries.GetArray(name)
+		src, ok = p.queries.GetArray(name)
 	}else{
-		src = p.queries.Get(name)
+		src, ok = p.queries.Get(name)
 	}
-	return types.Convert(src, t)
+	v, err := types.Convert(src, t)
+	return v, ok, err
 }
 
-func (p *requestParamsProcessor) processFormData(t reflect.Type, name string) (interface{}, error){
+func (p *requestParamsProcessor) processFormData(t reflect.Type, name string) (interface{}, bool, error){
 	src := interface{}(nil)
+	ok := false
 	if t.Kind() == reflect.Array || t.Kind() == reflect.Slice{
-		src = p.forms.GetArray(name)
+		src, ok = p.forms.GetArray(name)
 	}else{
-		src = p.forms.Get(name)
+		src, ok = p.forms.Get(name)
 	}
-	return types.Convert(src, t)
+	v, err := types.Convert(src, t)
+	return v, ok, err
 }
 
-func (p *requestParamsProcessor) processJson(t reflect.Type, name string) (interface{}, error){
-	return types.Convert(p.body, t)
+func (p *requestParamsProcessor) processJson(t reflect.Type, name string) (interface{}, bool, error){
+	v, err := types.Convert(p.body, t)
+	return v, true, err
 }
 
 func parseQuery(values Values, query string) error {

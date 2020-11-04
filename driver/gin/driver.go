@@ -123,16 +123,21 @@ func processRequestParams(processor *requestParamsProcessor, in reflect.Type, pt
 			ft = ft.Elem()
 		}
 
-		ret, err := processor.process(ft, source, name)
+		ret, ok, err := processor.process(ft, source, name)
 		if err != nil{
 			panic(err)
 		}
-		target := reflect.New(ft).Elem()
-		target.Set(reflect.ValueOf(ret))
-		if ptr{
-			target = target.Addr()
+		if !ok && ptr{
+			target := reflect.New(f.Type).Elem()
+			obj.FieldByName(f.Name).Set(target)
+		}else{
+			target := reflect.New(ft).Elem()
+			target.Set(reflect.ValueOf(ret))
+			if ptr{
+				target = target.Addr()
+			}
+			obj.FieldByName(f.Name).Set(target)
 		}
-		obj.FieldByName(f.Name).Set(target)
 	}
 	if ptr{
 		obj = obj.Addr()

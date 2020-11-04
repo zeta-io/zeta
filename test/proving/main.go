@@ -17,15 +17,21 @@ func (u *userApi) list(context context.Context, c1 *context.Context, c *ginx.Con
 }, args1 struct{
 	Name string `json:"name" param:"query,name"`
 	Age *int `json:"age" param:"query,age"`
+	NA  *string `json:"na" param:"query,na"`
+	NB  *string `json:"nb" param:"query,nb"`
 }) (string, error){
 	fmt.Println(context)
 	fmt.Println(c1)
 	fmt.Println(c)
 	fmt.Println(c2)
 	fmt.Println(args.Name)
-	fmt.Println(*args.Age)
+	fmt.Println(args.Age == nil)
 	fmt.Println(args1.Name)
-	fmt.Println(*args1.Age)
+	fmt.Println(args1.Age == nil)
+	fmt.Println(args1.NA == nil)
+	fmt.Println(args1.NA)
+	fmt.Println(args1.NB == nil)
+	fmt.Println(args1.NB)
 	return "hello nico", nil
 }
 
@@ -39,7 +45,7 @@ func main() {
 		c.Abort()
 	})
 	router := mvc.Router("/api/v1/users")
-	router.Post("", driver.HandlerFunc(uapi.list))
+	router.Post("", uapi.list)
 	mvc.Use(router, driver).Complete()
 
 	e := r.Run(":" + strconv.Itoa(8080))
