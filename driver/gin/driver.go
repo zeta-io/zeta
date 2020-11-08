@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/gin-gonic/gin"
 	"github.com/vectorgo/mvc"
-	"github.com/vectorgo/mvc/http"
 	"reflect"
 	"strings"
 )
@@ -17,20 +16,21 @@ var(
 )
 
 type Driver struct {
-	m *mvc.Mvc
 	e *gin.Engine
+
+	serial mvc.Serial
 	r func(c *gin.Context, data interface{}, err error)
 }
 
-func New(e *gin.Engine, r func(c *gin.Context, data interface{}, err error)) Driver{
-	return Driver{e: e, r: r}
+func New(e *gin.Engine, serial mvc.Serial, r func(c *gin.Context, data interface{}, err error)) Driver{
+	return Driver{e: e, serial: serial, r: r}
 }
 
-func (d Driver) Option(m *mvc.Mvc){
-	m.Driver(d)
+func (d Driver) Run(addr... string) error{
+	return d.e.Run(addr...)
 }
 
-func (d Driver) Handle(method http.Method, url string, middleware ...mvc.HandlerFunc){
+func (d Driver) Handle(method mvc.Method, url string, middleware ...mvc.HandlerFunc){
 	handleFunc := make([]gin.HandlerFunc, 0)
 	for _, m := range middleware{
 		call := m
@@ -45,7 +45,7 @@ func (d Driver) Handle(method http.Method, url string, middleware ...mvc.Handler
 			if c.IsAborted(){
 				return
 			}
-			rets := process(ctx, c, call)
+			rets := d.process(ctx, c, call)
 			if len(rets) > 0{
 				var data interface{}
 				var err error
@@ -63,8 +63,8 @@ func (d Driver) Handle(method http.Method, url string, middleware ...mvc.Handler
 	d.e.Handle(string(method), url, handleFunc...)
 }
 
-func process(ctx context.Context, c *gin.Context, call interface{}) []reflect.Value{
-	processor, err := newRequestParamsProcessor(c)
+func (d Driver) process(ctx context.Context, c *gin.Context, call interface{}) []reflect.Value{
+	processor, err := newRequestParamsProcessor(c, d.serial)
 	if err != nil{
 		panic(err)
 	}

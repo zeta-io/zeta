@@ -1,8 +1,6 @@
 // Router
 package mvc
 
-import "github.com/vectorgo/mvc/http"
-
 type router struct {
 	url string
 	middleware  []HandlerFunc
@@ -11,8 +9,8 @@ type router struct {
 
 type mapping struct {
 	url        string
-	method     http.Method
-	middleware  []HandlerFunc
+	method     Method
+	middleware []HandlerFunc
 }
 
 func Router(url string, middleware ...HandlerFunc) *router{
@@ -39,7 +37,7 @@ func (r *router) Group(url string, middleware ...HandlerFunc) *group {
 	}
 }
 
-func (r *router) Handle(method http.Method, url string, middleware ...HandlerFunc) *router {
+func (r *router) Handle(method Method, url string, middleware ...HandlerFunc) *router {
 	if r.mappings == nil {
 		r.mappings = make([]mapping, 0)
 	}
@@ -52,37 +50,37 @@ func (r *router) Handle(method http.Method, url string, middleware ...HandlerFun
 }
 
 func (r *router) Get(url string, middleware ...HandlerFunc) *router {
-	return r.Handle(http.MethodGet, url, middleware...)
+	return r.Handle(MethodGet, url, middleware...)
 }
 
 func (r *router) Post(url string, middleware ...HandlerFunc) *router {
-	return r.Handle(http.MethodPost, url, middleware...)
+	return r.Handle(MethodPost, url, middleware...)
 }
 
 func (r *router) Put(url string, middleware ...HandlerFunc) *router {
-	return r.Handle(http.MethodPut, url, middleware...)
+	return r.Handle(MethodPut, url, middleware...)
 }
 
 func (r *router) Delete(url string, middleware ...HandlerFunc) *router {
-	return r.Handle(http.MethodDelete, url, middleware...)
+	return r.Handle(MethodDelete, url, middleware...)
 }
 
 func (r *router) Patch(url string, middleware ...HandlerFunc) *router {
-	return r.Handle(http.MethodPatch, url, middleware...)
+	return r.Handle(MethodPatch, url, middleware...)
 }
 
 func (r *router) Head(url string, middleware ...HandlerFunc) *router {
-	return r.Handle(http.MethodHead, url, middleware...)
+	return r.Handle(MethodHead, url, middleware...)
 }
 
 func (r *router) Options(url string, middleware ...HandlerFunc) *router {
-	return r.Handle(http.MethodOptions, url, middleware...)
+	return r.Handle(MethodOptions, url, middleware...)
 }
 
 func (r *router) Connect(url string, middleware ...HandlerFunc) *router {
-	return r.Handle(http.MethodConnect, url, middleware...)
+	return r.Handle(MethodConnect, url, middleware...)
 }
 
 func (r *router) Trace(url string, middleware ...HandlerFunc) *router {
-	return r.Handle(http.MethodTrace, url, middleware...)
+	return r.Handle(MethodTrace, url, middleware...)
 }

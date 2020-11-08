@@ -5,8 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/vectorgo/mvc/http"
-	"github.com/vectorgo/mvc/util/types"
+	"github.com/vectorgo/mvc"
 	"io/ioutil"
 	"net/url"
 	"reflect"
@@ -35,14 +34,15 @@ func (v Values) GetArray(key string) ([]string, bool){
 
 type requestParamsProcessor struct {
 	c *gin.Context
-	contentType string
+	serial mvc.Serial
 
 	body string
 	forms Values
 	queries Values
+	contentType string
 }
 
-func newRequestParamsProcessor(c *gin.Context) (*requestParamsProcessor, error){
+func newRequestParamsProcessor(c *gin.Context, serial mvc.Serial) (*requestParamsProcessor, error){
 	contentType := contentType(c)
 	body, err := ioutil.ReadAll(c.Request.Body)
 	if err != nil{
@@ -57,17 +57,18 @@ func newRequestParamsProcessor(c *gin.Context) (*requestParamsProcessor, error){
 	}
 
 	forms := Values{}
-	if contentType == string(http.ContentTypePostForm){
+	if contentType == string(mvc.ContentTypePostForm){
 		err = parseQuery(forms, string(body))
 		if err != nil{
 			return nil, err
 		}
-	}else if contentType == string(http.ContentTypeFormData){
+	}else if contentType == string(mvc.ContentTypeFormData){
 		//TODO parse multipart/form-data
 	}
 
 	return &requestParamsProcessor{
 		c: c,
+		serial: serial,
 		contentType: contentType,
 		body: string(body),
 		queries: queries,
@@ -100,7 +101,7 @@ func (p *requestParamsProcessor) processQuery(t reflect.Type, name string) (inte
 	}else{
 		src, ok = p.queries.Get(name)
 	}
-	v, err := types.Convert(src, t)
+	v, err := p.serial.DeSerial(src, t)
 	return v, ok, err
 }
 
@@ -112,12 +113,12 @@ func (p *requestParamsProcessor) processFormData(t reflect.Type, name string) (i
 	}else{
 		src, ok = p.forms.Get(name)
 	}
-	v, err := types.Convert(src, t)
+	v, err := p.serial.DeSerial(src, t)
 	return v, ok, err
 }
 
 func (p *requestParamsProcessor) processJson(t reflect.Type, name string) (interface{}, bool, error){
-	v, err := types.Convert(p.body, t)
+	v, err := p.serial.DeSerial(p.body, t)
 	return v, true, err
 }
 

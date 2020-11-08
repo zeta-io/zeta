@@ -6,7 +6,6 @@ import (
 	ginx "github.com/gin-gonic/gin"
 	"github.com/vectorgo/mvc"
 	"github.com/vectorgo/mvc/driver/gin"
-	"strconv"
 )
 
 type userApi struct {}
@@ -38,17 +37,14 @@ func (u *userApi) list(context context.Context, c1 *context.Context, c *ginx.Con
 var uapi = userApi{}
 
 func main() {
-	r := ginx.New()
-
-	driver := gin.New(r, func(c *ginx.Context, data interface{}, err error){
+	driver := gin.New(ginx.New(), mvc.DefaultSerial(), func(c *ginx.Context, data interface{}, err error){
 		c.JSON(200, data)
 		c.Abort()
 	})
 	router := mvc.Router("/api/v1/users")
 	router.Post("", uapi.list)
-	mvc.Use(router, driver).Complete()
 
-	e := r.Run(":" + strconv.Itoa(8080))
+	e := mvc.New(router, driver).Run(":8080")
 	if e != nil{
 		panic(e)
 	}

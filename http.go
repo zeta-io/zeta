@@ -1,4 +1,4 @@
-package http
+package mvc
 
 type ContentType string
 type Method string
