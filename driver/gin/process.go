@@ -46,7 +46,7 @@ func newRequestParamsProcessor(c *gin.Context, serial mvc.Serial) (*requestParam
 	contentType := contentType(c)
 	body, err := ioutil.ReadAll(c.Request.Body)
 	if err != nil{
-		panic(err)
+		return nil, err
 	}
 	c.Request.Body = ioutil.NopCloser(bytes.NewBuffer(body))
 
@@ -88,6 +88,8 @@ func (p *requestParamsProcessor) process(t reflect.Type, source, name string) (i
 		return p.processFormData(t, name)
 	case "body":
 		return p.processJson(t, name)
+	case "path":
+		return p.processPath(t, name)
 	default:
 		return nil, false, errors.New(fmt.Sprintf("unsupport params source: %v", source))
 	}
@@ -103,6 +105,11 @@ func (p *requestParamsProcessor) processQuery(t reflect.Type, name string) (inte
 	}
 	v, err := p.serial.DeSerial(src, t)
 	return v, ok, err
+}
+
+func (p *requestParamsProcessor) processPath(t reflect.Type, name string) (interface{}, bool, error){
+	v, err := p.serial.DeSerial(p.c.Param(name), t)
+	return v, true, err
 }
 
 func (p *requestParamsProcessor) processFormData(t reflect.Type, name string) (interface{}, bool, error){

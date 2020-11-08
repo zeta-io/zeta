@@ -18,6 +18,9 @@ func (u *userApi) list(context context.Context, c1 *context.Context, c *ginx.Con
 	Age *int `json:"age" param:"query,age"`
 	NA  *string `json:"na" param:"query,na"`
 	NB  *string `json:"nb" param:"query,nb"`
+	B *bool `param:"query,b"`
+	Version string `param:"path,version"`
+	V1 *string `param:"path,version"`
 }) (string, error){
 	fmt.Println(context)
 	fmt.Println(c1)
@@ -31,6 +34,8 @@ func (u *userApi) list(context context.Context, c1 *context.Context, c *ginx.Con
 	fmt.Println(args1.NA)
 	fmt.Println(args1.NB == nil)
 	fmt.Println(args1.NB)
+	fmt.Println("v1 is null ? ", args1.V1 == nil)
+	fmt.Println("version is ", args1.Version)
 	return "hello nico", nil
 }
 
@@ -41,7 +46,7 @@ func main() {
 		c.JSON(200, data)
 		c.Abort()
 	})
-	router := mvc.Router("/api/v1/users")
+	router := mvc.Router("/api/:version/users")
 	router.Post("", uapi.list)
 
 	e := mvc.New(router, driver).Run(":8080")

@@ -5,6 +5,8 @@
 package mvc
 
 import (
+	"errors"
+	"fmt"
 	"github.com/shopspring/decimal"
 	"reflect"
 	"strconv"
@@ -13,21 +15,22 @@ import (
 const floatBits = 10000 * 10000 * 10000 * 10000
 
 var (
-	uintType = reflect.TypeOf(uint(0))
-	intType = reflect.TypeOf(0)
-	int8Type = reflect.TypeOf(int8(0))
-	uint8Type = reflect.TypeOf(uint8(0))
-	int16Type = reflect.TypeOf(int16(0))
-	uint16Type = reflect.TypeOf(uint64(0))
-	int32Type = reflect.TypeOf(int32(0))
-	uint32Type = reflect.TypeOf(uint32(0))
-	int64Type = reflect.TypeOf(int64(0))
-	uint64Type = reflect.TypeOf(uint64(0))
-	boolType = reflect.TypeOf(true)
+	uintType    = reflect.TypeOf(uint(0))
+	intType     = reflect.TypeOf(0)
+	int8Type    = reflect.TypeOf(int8(0))
+	uint8Type   = reflect.TypeOf(uint8(0))
+	int16Type   = reflect.TypeOf(int16(0))
+	uint16Type  = reflect.TypeOf(uint64(0))
+	int32Type   = reflect.TypeOf(int32(0))
+	uint32Type  = reflect.TypeOf(uint32(0))
+	int64Type   = reflect.TypeOf(int64(0))
+	uint64Type  = reflect.TypeOf(uint64(0))
+	boolType    = reflect.TypeOf(true)
 	float32Type = reflect.TypeOf(float32(0))
 	float64Type = reflect.TypeOf(float64(0))
-	stringType = reflect.TypeOf("")
-	bytesType = reflect.TypeOf([]byte{})
+	stringType  = reflect.TypeOf("")
+	stringArrayType = reflect.TypeOf([]string{})
+	bytesType   = reflect.TypeOf([]byte{})
 )
 
 type Serial interface {
@@ -131,129 +134,86 @@ func (s defaultSerial) Serial(dest interface{}) string{
 func (s defaultSerial) DeSerial(src interface{}, t reflect.Type) (interface{}, error){
 	val := s.Serial(src)
 	res := interface{}(nil)
+	if val == "" && t != stringType{
+		return nil, nil
+	}
 	switch t {
 	case float64Type:
-		if val == ""{
-			res = float64(0)
-			break
-		}
 		dec, err := decimal.NewFromString(val)
-		if err != nil{
+		if err != nil {
 			return nil, err
 		}
 		res, _ = dec.Float64()
 	case float32Type:
-		if val == ""{
-			res = float32(0)
-			break
-		}
 		dec, err := decimal.NewFromString(val)
-		if err != nil{
+		if err != nil {
 			return nil, err
 		}
 		res, _ = dec.Float64()
 	case boolType:
 		res = false
-		if val == "true"{
+		if val == "true" {
 			res = true
+		} else if val != "false" {
+			return nil, errors.New(fmt.Sprintf("%v is not bool type. ", val))
 		}
 	case intType:
-		if val == ""{
-			res = 0
-			break
-		}
 		it, err := strconv.ParseInt(val, 10, strconv.IntSize)
-		if err != nil{
+		if err != nil {
 			return nil, err
 		}
 		res = int(it)
 	case uintType:
-		if val == ""{
-			res = uint(0)
-			break
-		}
 		it, err := strconv.ParseUint(val, 10, strconv.IntSize)
-		if err != nil{
+		if err != nil {
 			return nil, err
 		}
 		res = uint(it)
 	case int8Type:
-		if val == ""{
-			res = int8(0)
-			break
-		}
 		it, err := strconv.ParseInt(val, 10, 8)
-		if err != nil{
+		if err != nil {
 			return nil, err
 		}
 		res = int8(it)
 	case uint8Type:
-		if val == ""{
-			res = uint8(0)
-			break
-		}
 		it, err := strconv.ParseUint(val, 10, 8)
-		if err != nil{
+		if err != nil {
 			return nil, err
 		}
 		res = uint8(it)
 	case int16Type:
-		if val == ""{
-			res = int16(0)
-			break
-		}
 		it, err := strconv.ParseInt(val, 10, 16)
-		if err != nil{
+		if err != nil {
 			return nil, err
 		}
 		res = int16(it)
 	case uint16Type:
-		if val == ""{
-			res = uint16(0)
-			break
-		}
 		it, err := strconv.ParseUint(val, 10, 16)
-		if err != nil{
+		if err != nil {
 			return nil, err
 		}
 		res = uint16(it)
 	case int32Type:
-		if val == ""{
-			res = int32(0)
-			break
-		}
 		it, err := strconv.ParseInt(val, 10, 32)
-		if err != nil{
+		if err != nil {
 			return nil, err
 		}
 		res = int32(it)
 	case uint32Type:
-		if val == ""{
-			res = uint32(0)
-			break
-		}
 		it, err := strconv.ParseUint(val, 10, 32)
-		if err != nil{
+		if err != nil {
 			return nil, err
 		}
 		res = uint32(it)
 	case int64Type:
-		if val == ""{
-			res = int64(0)
-			break
-		}
 		it, err := strconv.ParseInt(val, 10, 64)
-		if err != nil{
+		if err != nil {
 			return nil, err
 		}
 		res = it
 	case uint64Type:
-		if val == ""{
-			res = uint64(0)
-			break
-		}
 		it, err := strconv.ParseUint(val, 10, 64)
-		if err != nil{
+		if err != nil {
 			return nil, err
 		}
 		res = it
@@ -263,12 +223,10 @@ func (s defaultSerial) DeSerial(src interface{}, t reflect.Type) (interface{}, e
 		res = []byte(val)
 	default:
 		v := reflect.New(t)
-		if val != ""{
-			inter := v.Interface()
-			err := s.json.Unmarshal([]byte(val), &inter)
-			if err != nil{
-				return nil, err
-			}
+		inter := v.Interface()
+		err := s.json.Unmarshal([]byte(val), &inter)
+		if err != nil {
+			return nil, err
 		}
 		res = v.Elem().Interface()
 	}
