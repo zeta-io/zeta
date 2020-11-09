@@ -19,18 +19,47 @@ type Driver struct {
 	e *gin.Engine
 
 	serial mvc.Serial
+	validator mvc.Validator
+	disableValidator bool
 	r func(c *gin.Context, data interface{}, err error)
 }
 
-func New(e *gin.Engine, serial mvc.Serial, r func(c *gin.Context, data interface{}, err error)) Driver{
-	return Driver{e: e, serial: serial, r: r}
+func defaultResponse(c *gin.Context, data interface{}, err error){
+	if err != nil{
+		c.JSON(500, err.Error())
+	}
+	c.JSON(200, data)
 }
 
-func (d Driver) Run(addr... string) error{
+func New(e *gin.Engine) *Driver{
+	return &Driver{e: e, serial: mvc.DefaultSerial(), validator: mvc.DefaultValidator(), r: defaultResponse}
+}
+
+func (d *Driver) Serial(s mvc.Serial) *Driver{
+	d.serial = s
+	return d
+}
+
+func (d *Driver) Validator(v mvc.Validator) *Driver{
+	d.validator = v
+	return d
+}
+
+func (d *Driver) DisableValidator(flag bool) *Driver{
+	d.disableValidator = flag
+	return d
+}
+
+func (d *Driver) Response(r func(c *gin.Context, data interface{}, err error)) *Driver{
+	d.r = r
+	return d
+}
+
+func (d *Driver) Run(addr... string) error{
 	return d.e.Run(addr...)
 }
 
-func (d Driver) Handle(method mvc.Method, url string, middleware ...mvc.HandlerFunc){
+func (d *Driver) Handle(method mvc.Method, url string, middleware ...mvc.HandlerFunc){
 	handleFunc := make([]gin.HandlerFunc, 0)
 	for _, m := range middleware{
 		call := m
@@ -67,7 +96,7 @@ func (d Driver) Handle(method mvc.Method, url string, middleware ...mvc.HandlerF
 	d.e.Handle(string(method), url, handleFunc...)
 }
 
-func (d Driver) process(ctx context.Context, c *gin.Context, call interface{}) ([]reflect.Value, error){
+func (d *Driver) process(ctx context.Context, c *gin.Context, call interface{}) ([]reflect.Value, error){
 	processor, err := newRequestParamsProcessor(c, d.serial)
 	if err != nil{
 		return nil, err
@@ -102,6 +131,12 @@ func (d Driver) process(ctx context.Context, c *gin.Context, call interface{}) (
 			target, err = processRequestParams(processor, in, ptr)
 			if err != nil{
 				return nil, err
+			}
+			if ! d.disableValidator{
+				err = d.validator.Validate(target.Interface())
+				if err != nil{
+					return nil, err
+				}
 			}
 		}
 		args = append(args, target)

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	ginx "github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	"github.com/vectorgo/mvc"
 	"github.com/vectorgo/mvc/driver/gin"
 )
@@ -21,6 +22,7 @@ func (u *userApi) list(context context.Context, c1 *context.Context, c *ginx.Con
 	B *bool `param:"query,b"`
 	Version string `param:"path,version"`
 	V1 *string `param:"path,version"`
+	Size int  `param:"query,size" validate:"gte=0,lte=20"`
 }) (string, error){
 	fmt.Println(context)
 	fmt.Println(c1)
@@ -36,20 +38,28 @@ func (u *userApi) list(context context.Context, c1 *context.Context, c *ginx.Con
 	fmt.Println(args1.NB)
 	fmt.Println("v1 is null ? ", args1.V1 == nil)
 	fmt.Println("version is ", args1.Version)
+	fmt.Println("size is", args1.Size)
 	return "hello nico", nil
 }
 
 var uapi = userApi{}
 
 func main() {
-	driver := gin.New(ginx.New(), mvc.DefaultSerial(), func(c *ginx.Context, data interface{}, err error){
-		c.JSON(200, data)
-		c.Abort()
-	})
 	router := mvc.Router("/api/:version/users")
 	router.Post("", uapi.list)
 
-	e := mvc.New(router, driver).Run(":8080")
+	e := mvc.New(router, gin.New(ginx.New()).Response(func(c *ginx.Context, data interface{}, err error){
+		if err != nil{
+			if validateErrs, ok := err.(validator.ValidationErrors); ok && len(validateErrs) > 0{
+				validateErr := validateErrs[0]
+				c.JSON(200, fmt.Sprintf("%s param err, reason: %v", validateErr.Namespace(), validateErr))
+				c.Abort()
+			}
+			return
+		}
+		c.JSON(200, data)
+		c.Abort()
+	})).Run(":8080")
 	if e != nil{
 		panic(e)
 	}
