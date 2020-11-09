@@ -1,5 +1,5 @@
 package zeta
 
 type Option interface{
-	Option(zeta *Mvc)
+	Option(zeta *Zeta)
 }
