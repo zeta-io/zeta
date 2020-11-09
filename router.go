@@ -20,8 +20,8 @@ func Router(url string, middleware ...HandlerFunc) *router{
 	}
 }
 
-func (r *router) Option(m *Mvc){
-	m.r = r
+func (r *router) Option(z *Zeta){
+	z.r = r
 }
 
 func (r *router) Use(middleware ...HandlerFunc) *router{
