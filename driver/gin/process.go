@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/vectorgo/mvc"
+	"github.com/zeta-io/zeta"
 	"io/ioutil"
 	"net/url"
 	"reflect"
@@ -34,7 +34,7 @@ func (v Values) GetArray(key string) ([]string, bool){
 
 type requestParamsProcessor struct {
 	c *gin.Context
-	serial mvc.Serial
+	serial zeta.Serial
 
 	body string
 	forms Values
@@ -42,7 +42,7 @@ type requestParamsProcessor struct {
 	contentType string
 }
 
-func newRequestParamsProcessor(c *gin.Context, serial mvc.Serial) (*requestParamsProcessor, error){
+func newRequestParamsProcessor(c *gin.Context, serial zeta.Serial) (*requestParamsProcessor, error){
 	contentType := contentType(c)
 	body, err := ioutil.ReadAll(c.Request.Body)
 	if err != nil{
@@ -57,12 +57,12 @@ func newRequestParamsProcessor(c *gin.Context, serial mvc.Serial) (*requestParam
 	}
 
 	forms := Values{}
-	if contentType == string(mvc.ContentTypePostForm){
+	if contentType == string(zeta.ContentTypePostForm){
 		err = parseQuery(forms, string(body))
 		if err != nil{
 			return nil, err
 		}
-	}else if contentType == string(mvc.ContentTypeFormData){
+	}else if contentType == string(zeta.ContentTypeFormData){
 		//TODO parse multipart/form-data
 	}
 

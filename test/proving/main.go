@@ -5,8 +5,8 @@ import (
 	"fmt"
 	ginx "github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
-	"github.com/vectorgo/mvc"
-	"github.com/vectorgo/mvc/driver/gin"
+	"github.com/zeta-io/zeta"
+	"github.com/zeta-io/zeta/driver/gin"
 )
 
 type userApi struct {}
@@ -45,10 +45,10 @@ func (u *userApi) list(context context.Context, c1 *context.Context, c *ginx.Con
 var uapi = userApi{}
 
 func main() {
-	router := mvc.Router("/api/:version/users")
+	router := zeta.Router("/api/:version/users")
 	router.Post("", uapi.list)
 
-	e := mvc.New(router, gin.New(ginx.New()).Response(func(c *ginx.Context, data interface{}, err error){
+	e := zeta.New(router, gin.New(ginx.New()).Response(func(c *ginx.Context, data interface{}, err error){
 		if err != nil{
 			if validateErrs, ok := err.(validator.ValidationErrors); ok && len(validateErrs) > 0{
 				validateErr := validateErrs[0]

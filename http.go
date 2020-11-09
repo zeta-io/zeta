@@ -1,4 +1,4 @@
-package mvc
+package zeta
 
 type ContentType string
 type Method string

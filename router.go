@@ -1,5 +1,5 @@
 // Router
-package mvc
+package zeta
 
 type router struct {
 	url string

@@ -1,4 +1,4 @@
-package mvc
+package zeta
 
 type Config struct {
 

@@ -3,7 +3,7 @@ package gin
 import (
 	"context"
 	"github.com/gin-gonic/gin"
-	"github.com/vectorgo/mvc"
+	"github.com/zeta-io/zeta"
 	"reflect"
 	"strings"
 )
@@ -18,8 +18,8 @@ var(
 type Driver struct {
 	e *gin.Engine
 
-	serial mvc.Serial
-	validator mvc.Validator
+	serial zeta.Serial
+	validator zeta.Validator
 	disableValidator bool
 	r func(c *gin.Context, data interface{}, err error)
 }
@@ -32,15 +32,15 @@ func defaultResponse(c *gin.Context, data interface{}, err error){
 }
 
 func New(e *gin.Engine) *Driver{
-	return &Driver{e: e, serial: mvc.DefaultSerial(), validator: mvc.DefaultValidator(), r: defaultResponse}
+	return &Driver{e: e, serial: zeta.DefaultSerial(), validator: zeta.DefaultValidator(), r: defaultResponse}
 }
 
-func (d *Driver) Serial(s mvc.Serial) *Driver{
+func (d *Driver) Serial(s zeta.Serial) *Driver{
 	d.serial = s
 	return d
 }
 
-func (d *Driver) Validator(v mvc.Validator) *Driver{
+func (d *Driver) Validator(v zeta.Validator) *Driver{
 	d.validator = v
 	return d
 }
@@ -59,7 +59,7 @@ func (d *Driver) Run(addr... string) error{
 	return d.e.Run(addr...)
 }
 
-func (d *Driver) Handle(method mvc.Method, url string, middleware ...mvc.HandlerFunc){
+func (d *Driver) Handle(method zeta.Method, url string, middleware ...zeta.HandlerFunc){
 	handleFunc := make([]gin.HandlerFunc, 0)
 	for _, m := range middleware{
 		call := m

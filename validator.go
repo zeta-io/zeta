@@ -1,4 +1,4 @@
-package mvc
+package zeta
 
 import "github.com/go-playground/validator/v10"
 

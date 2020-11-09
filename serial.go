@@ -2,7 +2,7 @@
 2 * @Author: Nico
 3 * @Date: 2020/11/8 17:53
 4 */
-package mvc
+package zeta
 
 import (
 	"errors"

@@ -1,3 +1,3 @@
-package mvc
+package zeta
 
 type HandlerFunc interface{}
