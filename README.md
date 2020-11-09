@@ -7,8 +7,8 @@ Zeta has the following features:
 - easily plug
 - extensible
 - practice is the sole criterion for testing truth
-# Sample
-The demo of gin:
+# Usage
+The sample of Gin:
 ```go
 package main
 
@@ -37,3 +37,6 @@ func main() {
 	}
 }
 ```
+[More samples.](https://github.com/zeta-io/sample)
+# Driver
+- [Ginx](https://github.com/zeta-io/ginx): Gin driver for zeta. 
