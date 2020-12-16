@@ -4,10 +4,10 @@ type ContentType string
 type Method string
 
 const (
-	ContentTypePostForm  ContentType = "application/x-www-form-urlencoded"
+	ContentTypePostForm ContentType = "application/x-www-form-urlencoded"
 	ContentTypeFormData ContentType = "multipart/form-data"
-	ContentTypeJSON      ContentType = "application/json"
-	ContentTypeXML       ContentType = "application/xml"
+	ContentTypeJSON     ContentType = "application/json"
+	ContentTypeXML      ContentType = "application/xml"
 )
 
 const (

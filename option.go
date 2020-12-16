@@ -1,5 +1,5 @@
 package zeta
 
-type Option interface{
+type Option interface {
 	Option(zeta *Zeta)
 }

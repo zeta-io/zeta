@@ -5,9 +5,10 @@
 package zeta
 
 import (
-	"github.com/stretchr/testify/assert"
 	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 type serialTest struct {
@@ -16,9 +17,9 @@ type serialTest struct {
 }
 
 type deserialTest struct {
-	src interface{}
-	t reflect.Type
-	want interface{}
+	src     interface{}
+	t       reflect.Type
+	want    interface{}
 	wantErr bool
 }
 
@@ -34,7 +35,7 @@ func TestDefaultSerial_DeSerial(t *testing.T) {
 		{src: "[\"123\"]", t: reflect.TypeOf([]string{"123"}), want: []string{"123"}},
 		{src: []string{""}, t: reflect.TypeOf([]int{}), want: nil, wantErr: true},
 	}
-	for _, test := range tests{
+	for _, test := range tests {
 		res, err := s.DeSerial(test.src, test.t)
 		assert.Equal(t, err != nil, test.wantErr)
 		assert.Equal(t, res, test.want)
@@ -45,7 +46,7 @@ func TestDefaultSerial_Serial(t *testing.T) {
 	s := defaultSerial{
 		json: defaultJSON{},
 	}
-	list := []int{1,2,3}
+	list := []int{1, 2, 3}
 
 	int8 := int8(1)
 	uint8 := uint8(1)
@@ -113,7 +114,7 @@ func TestDefaultSerial_Serial(t *testing.T) {
 		{dest: &list, want: "[1,2,3]"},
 	}
 
-	for _, test := range tests{
+	for _, test := range tests {
 		assert.Equal(t, s.Serial(test.dest), test.want)
 	}
 }

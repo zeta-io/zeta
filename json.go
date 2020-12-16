@@ -7,16 +7,16 @@ type JSON interface {
 	Unmarshal(data []byte, v interface{}) error
 }
 
-type defaultJSON struct {}
+type defaultJSON struct{}
 
-func DefaultJSON() JSON{
+func DefaultJSON() JSON {
 	return defaultJSON{}
 }
 
-func (c defaultJSON) Marshal(v interface{}) ([]byte, error){
+func (c defaultJSON) Marshal(v interface{}) ([]byte, error) {
 	return json.Marshal(v)
 }
 
-func (c defaultJSON) Unmarshal(data []byte, v interface{}) error{
+func (c defaultJSON) Unmarshal(data []byte, v interface{}) error {
 	return json.Unmarshal(data, v)
 }

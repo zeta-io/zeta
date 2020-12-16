@@ -2,9 +2,9 @@
 package zeta
 
 type router struct {
-	url string
-	middleware  []HandlerFunc
-	mappings    []mapping
+	url        string
+	middleware []HandlerFunc
+	mappings   []mapping
 }
 
 type mapping struct {
@@ -13,18 +13,18 @@ type mapping struct {
 	middleware []HandlerFunc
 }
 
-func Router(url string, middleware ...HandlerFunc) *router{
+func Router(url string, middleware ...HandlerFunc) *router {
 	return &router{
-		url: url,
+		url:        url,
 		middleware: middleware,
 	}
 }
 
-func (r *router) Option(z *Zeta){
+func (r *router) Option(z *Zeta) {
 	z.r = r
 }
 
-func (r *router) Use(middleware ...HandlerFunc) *router{
+func (r *router) Use(middleware ...HandlerFunc) *router {
 	r.middleware = append(r.middleware, middleware...)
 	return r
 }
@@ -32,8 +32,8 @@ func (r *router) Use(middleware ...HandlerFunc) *router{
 func (r *router) Group(url string, middleware ...HandlerFunc) *group {
 	return &group{
 		middleware: middleware,
-		url: url,
-		r: r,
+		url:        url,
+		r:          r,
 	}
 }
 

@@ -7,30 +7,31 @@ package zeta
 import (
 	"errors"
 	"fmt"
-	"github.com/shopspring/decimal"
 	"reflect"
 	"strconv"
+
+	"github.com/shopspring/decimal"
 )
 
 const floatBits = 10000 * 10000 * 10000 * 10000
 
 var (
-	uintType    = reflect.TypeOf(uint(0))
-	intType     = reflect.TypeOf(0)
-	int8Type    = reflect.TypeOf(int8(0))
-	uint8Type   = reflect.TypeOf(uint8(0))
-	int16Type   = reflect.TypeOf(int16(0))
-	uint16Type  = reflect.TypeOf(uint16(0))
-	int32Type   = reflect.TypeOf(int32(0))
-	uint32Type  = reflect.TypeOf(uint32(0))
-	int64Type   = reflect.TypeOf(int64(0))
-	uint64Type  = reflect.TypeOf(uint64(0))
-	boolType    = reflect.TypeOf(true)
-	float32Type = reflect.TypeOf(float32(0))
-	float64Type = reflect.TypeOf(float64(0))
-	stringType  = reflect.TypeOf("")
+	uintType        = reflect.TypeOf(uint(0))
+	intType         = reflect.TypeOf(0)
+	int8Type        = reflect.TypeOf(int8(0))
+	uint8Type       = reflect.TypeOf(uint8(0))
+	int16Type       = reflect.TypeOf(int16(0))
+	uint16Type      = reflect.TypeOf(uint16(0))
+	int32Type       = reflect.TypeOf(int32(0))
+	uint32Type      = reflect.TypeOf(uint32(0))
+	int64Type       = reflect.TypeOf(int64(0))
+	uint64Type      = reflect.TypeOf(uint64(0))
+	boolType        = reflect.TypeOf(true)
+	float32Type     = reflect.TypeOf(float32(0))
+	float64Type     = reflect.TypeOf(float64(0))
+	stringType      = reflect.TypeOf("")
 	stringArrayType = reflect.TypeOf([]string{})
-	bytesType   = reflect.TypeOf([]byte{})
+	bytesType       = reflect.TypeOf([]byte{})
 )
 
 type Serial interface {
@@ -42,15 +43,15 @@ type defaultSerial struct {
 	json JSON
 }
 
-func DefaultSerial(jsons... JSON) Serial{
+func DefaultSerial(jsons ...JSON) Serial {
 	var json JSON = defaultJSON{}
-	if len(jsons) > 0{
+	if len(jsons) > 0 {
 		json = jsons[0]
 	}
 	return &defaultSerial{json: json}
 }
 
-func (s defaultSerial) Serial(dest interface{}) string{
+func (s defaultSerial) Serial(dest interface{}) string {
 	var key string
 	if dest == nil {
 		return key
@@ -113,15 +114,15 @@ func (s defaultSerial) Serial(dest interface{}) string{
 	case *[]byte:
 		key = string(*dest.(*[]byte))
 	case bool:
-		if dest.(bool){
+		if dest.(bool) {
 			key = "true"
-		}else{
+		} else {
 			key = "false"
 		}
 	case *bool:
-		if *dest.(*bool){
+		if *dest.(*bool) {
 			key = "true"
-		}else{
+		} else {
 			key = "false"
 		}
 	default:
@@ -131,10 +132,10 @@ func (s defaultSerial) Serial(dest interface{}) string{
 	return key
 }
 
-func (s defaultSerial) DeSerial(src interface{}, t reflect.Type) (interface{}, error){
+func (s defaultSerial) DeSerial(src interface{}, t reflect.Type) (interface{}, error) {
 	val := s.Serial(src)
 	res := interface{}(nil)
-	if val == "" && t != stringType{
+	if val == "" && t != stringType {
 		return nil, nil
 	}
 	switch t {

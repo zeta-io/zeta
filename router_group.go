@@ -1,12 +1,12 @@
 package zeta
 
 type group struct {
-	r     *router
+	r          *router
 	url        string
-	middleware  []HandlerFunc
+	middleware []HandlerFunc
 }
 
-func (g *group) Use(middleware ...HandlerFunc) *group{
+func (g *group) Use(middleware ...HandlerFunc) *group {
 	g.middleware = append(g.middleware, middleware...)
 	return g
 }
@@ -14,13 +14,13 @@ func (g *group) Use(middleware ...HandlerFunc) *group{
 func (g *group) Group(url string, middleware ...HandlerFunc) *group {
 	return &group{
 		middleware: append(g.middleware, middleware...),
-		url: g.url + url,
-		r: g.r,
+		url:        g.url + url,
+		r:          g.r,
 	}
 }
 
 func (g *group) Handle(method Method, url string, middleware ...HandlerFunc) *router {
-	return g.r.Handle(method, g.url + url, append(g.middleware, middleware...)...)
+	return g.r.Handle(method, g.url+url, append(g.middleware, middleware...)...)
 }
 
 func (g *group) Get(url string, middleware ...HandlerFunc) *router {

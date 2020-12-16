@@ -10,10 +10,10 @@ type defaultValidator struct {
 	validator *validator.Validate
 }
 
-func (v defaultValidator) Validate(s interface{}) error{
+func (v defaultValidator) Validate(s interface{}) error {
 	return v.validator.Struct(s)
 }
 
-func DefaultValidator() Validator{
+func DefaultValidator() Validator {
 	return defaultValidator{validator.New()}
 }
