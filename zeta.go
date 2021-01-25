@@ -1,38 +1,48 @@
 package zeta
 
+import "sync"
+
 type Zeta struct {
-	r          *router
+	*router
+	sync.Mutex
+
 	d          Driver
+	loaded       bool
 	components map[string]interface{}
 }
 
-func New(r *router, d Driver, options ...Option) *Zeta {
+func New(d Driver, options ...Option) *Zeta {
+	router := &router{}
+	routerGroup := &group{
+		r: router,
+	}
+	router.group = routerGroup
+
 	z := &Zeta{
-		r:          r,
-		d:          d,
+		d: d,
+		loaded: false,
+		router: router,
 		components: map[string]interface{}{},
 	}
-	return z.Use(options...)
+	return z.Options(options...)
 }
 
-func (z *Zeta) Use(options ...Option) *Zeta {
+func (z *Zeta) Options(options ...Option) *Zeta {
 	for _, option := range options {
 		option.Option(z)
 	}
 	return z
 }
 
-func (z *Zeta) Driver(driver Driver) *Zeta {
-	z.d = driver
-	return z
-}
-
 func (z *Zeta) Complete() {
-	if z.d == nil {
-		panic("driver not found.")
-	}
-	for _, mapping := range z.r.mappings {
-		z.d.Handle(mapping.method, mapping.url, mapping.middleware...)
+	z.Lock()
+	defer z.Unlock()
+	if ! z.loaded{
+		if z.d == nil {
+			panic("driver not found.")
+		}
+		z.d.Option(z)
+		z.loaded = true
 	}
 }
 

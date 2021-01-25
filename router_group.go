@@ -58,3 +58,7 @@ func (g *group) Connect(url string, middleware ...HandlerFunc) *router {
 func (g *group) Trace(url string, middleware ...HandlerFunc) *router {
 	return g.Handle(MethodTrace, url, middleware...)
 }
+
+func (g *group) Any(url string, middleware ...HandlerFunc) *router {
+	return g.Handle(MethodAny, url, middleware...)
+}

@@ -2,26 +2,49 @@
 package zeta
 
 type router struct {
-	url        string
+	*group
+
 	middleware []HandlerFunc
-	mappings   []mapping
+	mappings   []Mapping
 }
 
-type mapping struct {
+type Mapping struct {
 	url        string
 	method     Method
 	middleware []HandlerFunc
 }
 
-func Router(url string, middleware ...HandlerFunc) *router {
-	return &router{
-		url:        url,
-		middleware: middleware,
-	}
+func (m *Mapping) Url() string{
+	return m.url
+}
+
+func (m *Mapping) Method() Method{
+	return m.method
+}
+
+func (m *Mapping) Middleware() []HandlerFunc{
+	return m.middleware
 }
 
 func (r *router) Option(z *Zeta) {
 	z.r = r
+}
+
+func (r *router) Middleware() []HandlerFunc{
+	return r.middleware
+}
+
+func (r *router) Mappings() []Mapping{
+	return r.mappings
+}
+
+func (r *router) Handle(method Method, url string, middleware ...HandlerFunc) *router {
+	r.mappings = append(r.mappings, Mapping{
+		method:     method,
+		url:        r.url + url,
+		middleware: middleware,
+	})
+	return r
 }
 
 func (r *router) Use(middleware ...HandlerFunc) *router {
@@ -35,52 +58,4 @@ func (r *router) Group(url string, middleware ...HandlerFunc) *group {
 		url:        url,
 		r:          r,
 	}
-}
-
-func (r *router) Handle(method Method, url string, middleware ...HandlerFunc) *router {
-	if r.mappings == nil {
-		r.mappings = make([]mapping, 0)
-	}
-	r.mappings = append(r.mappings, mapping{
-		method:     method,
-		url:        r.url + url,
-		middleware: append(r.middleware, middleware...),
-	})
-	return r
-}
-
-func (r *router) Get(url string, middleware ...HandlerFunc) *router {
-	return r.Handle(MethodGet, url, middleware...)
-}
-
-func (r *router) Post(url string, middleware ...HandlerFunc) *router {
-	return r.Handle(MethodPost, url, middleware...)
-}
-
-func (r *router) Put(url string, middleware ...HandlerFunc) *router {
-	return r.Handle(MethodPut, url, middleware...)
-}
-
-func (r *router) Delete(url string, middleware ...HandlerFunc) *router {
-	return r.Handle(MethodDelete, url, middleware...)
-}
-
-func (r *router) Patch(url string, middleware ...HandlerFunc) *router {
-	return r.Handle(MethodPatch, url, middleware...)
-}
-
-func (r *router) Head(url string, middleware ...HandlerFunc) *router {
-	return r.Handle(MethodHead, url, middleware...)
-}
-
-func (r *router) Options(url string, middleware ...HandlerFunc) *router {
-	return r.Handle(MethodOptions, url, middleware...)
-}
-
-func (r *router) Connect(url string, middleware ...HandlerFunc) *router {
-	return r.Handle(MethodConnect, url, middleware...)
-}
-
-func (r *router) Trace(url string, middleware ...HandlerFunc) *router {
-	return r.Handle(MethodTrace, url, middleware...)
 }

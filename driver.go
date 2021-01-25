@@ -1,6 +1,6 @@
 package zeta
 
 type Driver interface {
+	Option
 	Run(addr ...string) error
-	Handle(method Method, url string, middleware ...HandlerFunc)
 }

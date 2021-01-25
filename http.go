@@ -20,4 +20,5 @@ const (
 	MethodOptions Method = "OPTIONS"
 	MethodTrace   Method = "TRACE"
 	MethodPatch   Method = "PATCH"
+	MethodAny	  Method = "ANY"
 )
